@@ -10,9 +10,51 @@ param (
 
 $removals | % { Set-Variable -Name "remove$_" -Value $true }
 
-# Convert paths for convienience, needed for Linux/macOS
-function Seperator {
+# Convert paths for convenience, needed for Linux/macOS
+function Separator {
 	return $args -replace '\\', "$([IO.Path]::DirectorySeparatorChar)"
+}
+
+# Adds Atlas PSModulesPath to profile for the PowerShell Extension
+$userEnv = [System.EnvironmentVariableTarget]::User
+if ($psEditor.Workspace.Path -and ([Environment]::GetEnvironmentVariable('LOCALBUILD_DONT_ASK_FOR_MODULES', $userEnv) -ne "$true")) {
+	function DontAsk {
+		[Environment]::SetEnvironmentVariable('LOCALBUILD_DONT_ASK_FOR_MODULES', $true, $userEnv)
+	}
+
+	$title = 'Adding to PowerShell profile'
+	$description = @"
+Atlas includes some PowerShell modules by default that aren't usually recognised by the VSCode PowerShell extension.
+Would you like to add to your PowerShell profile to automatically recognise these modules when developing Atlas?`n`n
+"@
+	switch ($host.ui.PromptForChoice($title, $description, ('&Yes', '&No', "&Don't ask me again"), 0)) {
+		0 {
+			if (!(Test-Path $PROFILE)) {
+				New-Item -Path $PROFILE -ItemType File -Force | Out-Null
+			}
+
+			Add-Content -Path $PROFILE -Value @'
+#--LOCAL-BUILD-MODULES-START--#
+$workspace = $psEditor.Workspace.Path
+$modulesFile = "$workspace\.atlasPsModulesPath"
+if ([bool](Test-Path 'Env:\VSCODE_*') -and (Test-Path $workspace -EA 0) -and (Test-Path $modulesFile -EA 0)) {
+	$modulePath = Join-Path $workspace (Get-Content $modulesFile -Raw)
+	if (!(Test-Path $modulePath -PathType Container)) {
+		Write-Warning "Couldn't find module path specified in '$modulesFile', no Atlas modules can be loaded."
+	} else {
+		$env:PSModulePath += [IO.Path]::PathSeparator + $modulePath
+	}
+}
+#--LOCAL-BUILD-MODULES-END--#
+'@
+
+			DontAsk
+			& $PROFILE
+		}
+		2 {
+			DontAsk
+		}
+	}
 }
 
 # check 7z
@@ -47,7 +89,7 @@ function GetNewName {
 }
 if ($replaceOldPlaybook -and (Test-Path -Path $apbxFileName)) {
 	try {
-		$stream = [System.IO.File]::Open($(Seperator "$PWD\$apbxFileName"), 'Open', 'Read', 'Write')
+		$stream = [System.IO.File]::Open($(Separator "$PWD\$apbxFileName"), 'Open', 'Read', 'Write')
 		$stream.Close()
 		Remove-Item -Path $apbxFileName -Force -EA 0
 	} catch {
@@ -57,12 +99,12 @@ if ($replaceOldPlaybook -and (Test-Path -Path $apbxFileName)) {
 } elseif (Test-Path -Path $apbxFileName) {
 	GetNewName
 }
-$apbxPath = Seperator "$PWD\$apbxFileName"
+$apbxPath = Separator "$PWD\$apbxFileName"
 
 # make temp directories
 $rootTemp = New-Item (Join-Path -Path $([System.IO.Path]::GetTempPath()) -ChildPath $([System.Guid]::NewGuid())) -ItemType Directory -Force
 if (!(Test-Path -Path "$rootTemp")) { throw "Failed to create temporary directory!" }
-$playbookTemp = New-Item $(Seperator "$rootTemp\playbook") -Type Directory
+$playbookTemp = New-Item $(Separator "$rootTemp\playbook") -Type Directory
 
 try {
 	# remove entries in playbook config that make it awkward for testing
@@ -73,13 +115,13 @@ try {
 	if ($removeWinverRequirement) {$patterns += "<string>", "</SupportedBuilds>", "<SupportedBuilds>"}
 	if ($removeVerification) {$patterns += "<ProductCode>"}
 
-	$tempPbConfPath = Seperator "$playbookTemp\playbook.conf"
+	$tempPbConfPath = Separator "$playbookTemp\playbook.conf"
 	if ($patterns.Count -gt 0) {
 		Get-Content "playbook.conf" | Where-Object { $_ -notmatch ($patterns -join '|') } | Set-Content $tempPbConfPath
 	}
 
-	$customYmlPath = Seperator "Configuration\custom.yml"
-	$tempCustomYmlPath = Seperator "$playbookTemp\$customYmlPath"
+	$customYmlPath = Separator "Configuration\custom.yml"
+	$tempCustomYmlPath = Separator "$playbookTemp\$customYmlPath"
 	if ($AddLiveLog) {
 		if (Test-Path $customYmlPath -PathType Leaf) {
 			New-Item (Split-Path $tempCustomYmlPath -Parent) -ItemType Directory -Force | Out-Null
@@ -105,8 +147,8 @@ while ($true) { Get-Content -Wait -LiteralPath $a -EA 0 | Write-Output; Start-Sl
 		}
 	}
 
-	$startYmlPath = Seperator "Configuration\atlas\start.yml"
-	$tempStartYmlPath = Seperator "$playbookTemp\$startYmlPath"
+	$startYmlPath = Separator "Configuration\atlas\start.yml"
+	$tempStartYmlPath = Separator "$playbookTemp\$startYmlPath"
 	if ($removeDependencies) {
 		if (Test-Path $startYmlPath -PathType Leaf) {
 			New-Item (Split-Path $tempStartYmlPath -Parent) -ItemType Directory -Force | Out-Null
@@ -124,8 +166,8 @@ while ($true) { Get-Content -Wait -LiteralPath $a -EA 0 | Write-Output; Start-Sl
 		}
 	}
 
-	$oemYmlPath = Seperator "Configuration\tweaks\misc\config-oem-information.yml"
-	$tempOemYmlPath = Seperator "$playbookTemp\$oemYmlPath"
+	$oemYmlPath = Separator "Configuration\tweaks\misc\config-oem-information.yml"
+	$tempOemYmlPath = Separator "$playbookTemp\$oemYmlPath"
 	if (Test-Path $oemYmlPath -PathType Leaf) {
 		$confXml = ([xml](Get-Content "playbook.conf" -Raw -EA 0)).Playbook
 		$version = "v$($confXml.Version)"
@@ -159,13 +201,13 @@ while ($true) { Get-Content -Wait -LiteralPath $a -EA 0 | Write-Output; Start-Sl
 	if (Test-Path $tempCustomYmlPath) { $excludeFiles += "custom.yml" }
 	if (Test-Path $tempStartYmlPath) { $excludeFiles += "start.yml" }
 	if (Test-Path $tempPbConfPath) { $excludeFiles += "playbook.conf" }
-	$files = Seperator "$rootTemp\7zFiles.txt"
+	$files = Separator "$rootTemp\7zFiles.txt"
 	(Get-ChildItem -File -Exclude $excludeFiles -Recurse).FullName | Resolve-Path -Relative | ForEach-Object {$_.Substring(2)} | Out-File $files -Encoding utf8
 
 	if (!$NoPassword) { $pass = '-pmalte' }
 	& $7zPath a -spf -y -mx1 $pass -tzip "$apbxPath" `@"$files" | Out-Null
 	# add edited files
-	if (Test-Path $(Seperator "$playbookTemp\*.*")) {
+	if (Test-Path $(Separator "$playbookTemp\*.*")) {
 		Push-Location "$playbookTemp"
 		& $7zPath u $pass "$apbxPath" * | Out-Null
 		Pop-Location

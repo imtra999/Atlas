@@ -1,22 +1,7 @@
-param (
-    [switch]$ThemeMRU
-)
-
 $windir = [Environment]::GetFolderPath('Windows')
+& "$windir\AtlasModules\initPowerShell.ps1"
 $atlasDesktop = "$windir\AtlasDesktop"
 $atlasModules = "$windir\AtlasModules"
-
-function ThemeMRU {
-    Set-ItemProperty -Path "HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Themes" -Name "ThemeMRU" -Value "$((@(
-        "atlas-v0.4.x-dark.theme",
-        "atlas-v0.4.x-light.theme",
-        "atlas-v0.3.x-dark.theme",
-        "atlas-v0.3.x-light.theme",
-        "dark.theme",
-        "aero.theme"
-    ) | ForEach-Object { "$windir\resources\Themes\$_" }) -join ';');" -Type String -Force
-}
-if ($ThemeMRU) { ThemeMRU; exit }
 
 $title = 'Preparing Atlas user settings...'
 
@@ -37,11 +22,11 @@ if ([System.Environment]::OSVersion.Version.Build -ge 22000) {
     reg import "$atlasDesktop\4. Interface Tweaks\File Explorer Customization\Gallery\Disable Gallery (default).reg" *>$null
 
     # Set ThemeMRU (recent themes)
-    ThemeMRU | Out-Null
+    Set-ThemeMRU | Out-Null
 }
 
 # Set lockscreen wallpaper
-& "$atlasModules\Scripts\lockscreen.ps1"
+Set-LockscreenImage
 
 # Disable 'Network' in navigation pane
 reg import "$atlasDesktop\3. General Configuration\File Sharing\Network Navigation Pane\Disable Network Navigation Pane (default).reg" *>$null
