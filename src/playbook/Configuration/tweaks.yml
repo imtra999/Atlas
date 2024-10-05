@@ -110,7 +110,6 @@ actions:
   #  privacy\advertising                                                       #
   # -------------------------------------------------------------------------- #
   - !task: {path: 'tweaks\privacy\advertising\disable-advertising-info.yml'}
-  - !task: {path: 'tweaks\privacy\advertising\disable-bluetooth-advertising.yml'}
   - !task: {path: 'tweaks\privacy\advertising\disable-sync-provider-notifs.yml'}
 
   # -------------------------------------------------------------------------- #
@@ -266,8 +265,9 @@ actions:
   # -------------------------------------------------------------------------- #
   - !task: {path: 'tweaks\qol\startup-shutdown\decrease-shutdown-time.yml'}
   - !task: {path: 'tweaks\qol\startup-shutdown\disable-startup-delay.yml'}
-  - !task: {path: 'tweaks\qol\startup-shutdown\force-end-shutdown-apps.yml'}
-  - !task: {path: 'tweaks\qol\startup-shutdown\enable-verbose-messages.yml'}
+  # - !task: {path: 'tweaks\qol\startup-shutdown\force-end-shutdown-apps.yml'}
+    # It confused people
+  # - !task: {path: 'tweaks\qol\startup-shutdown\enable-verbose-messages.yml'}
 
   # -------------------------------------------------------------------------- #
   #  qol\system                                                                #
@@ -314,7 +314,7 @@ actions:
   # >>> Description <<<
   #
   # Tweaks for debloating Windows, which could be for
-  # storage space or convienience.
+  # storage space or convenience.
   # -----------------------------------------------------
   - !writeStatus: {status: 'Running debloating tweaks'}
   - !task: {path: 'tweaks\debloat\config-content-delivery.yml'}

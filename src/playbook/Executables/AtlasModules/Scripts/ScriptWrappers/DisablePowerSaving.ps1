@@ -4,6 +4,9 @@ param (
     [switch]$Silent
 )
 
+$windir = [Environment]::GetFolderPath('Windows')
+& "$windir\AtlasModules\initPowerShell.ps1"
+
 if (!$Silent) {
     $isLaptop = (Get-CimInstance -Class Win32_ComputerSystem -Property PCSystemType).PCSystemType -eq 2
     if ($isLaptop) {
@@ -54,7 +57,7 @@ powercfg /setacvalueindex scheme_current 54533251-82be-4824-96c1-47b60b740d00 4d
 powercfg /setactive scheme_current
 
 Write-Host "Disabling power-saving ACPI devices..." -ForegroundColor Yellow
-& "$([Environment]::GetFolderPath('Windows'))\AtlasModules\Scripts\toggleDev.cmd" -Disable '@("ACPI Processor Aggregator", "Microsoft Windows Management Interface for ACPI")' | Out-Null
+& "$windir\AtlasModules\Scripts\toggleDev.cmd" -Disable '@("ACPI Processor Aggregator", "Microsoft Windows Management Interface for ACPI")' | Out-Null
 
 Write-Host "Disabling network adapter power-saving..." -ForegroundColor Yellow
 $properties = Get-NetAdapter -Physical | Get-NetAdapterAdvancedProperty
@@ -124,10 +127,6 @@ New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\stornvme\Paramet
 $powerKey = "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling"
 if (!(Test-Path $powerKey)) { New-Item $powerKey | Out-Null }
 New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Power\PowerThrottling" -Name "PowerThrottlingOff" -Value 1 -PropertyType DWORD -Force | Out-Null
-# Disable the kernel from being tickless
-# It's power saving
-# https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/bcdedit--set#additional-settings
-bcdedit /set disabledynamictick yes | Out-Null
 
 if ($Silent) { exit }
-$null = Read-Host "`nCompleted.`nPress Enter to exit"
+Read-Pause "`nCompleted.`nPress Enter to exit"
