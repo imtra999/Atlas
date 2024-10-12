@@ -20,13 +20,12 @@ sc.exe config NetBT start=system | Out-Null
 choice /c:yn /n /m "Would you like to change your network profile to 'Private'? [Y/N] "
 if ($LASTEXITCODE -eq 1) {
     # Set network profile to 'Private Network'
-    $profiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles" -Recurse | Where-Object { $_.GetValue("Category") -ne $null }
-    foreach ($profile in $profiles) {
-        Set-ItemProperty -Path $profile.PSPath -Name "Category" -Value 1 | Out-Null
-    }
+    Get-NetConnectionProfile | Set-NetConnectionProfile -NetworkCategory Private
 
-    # Enable network discovery firewall rules
-    Get-NetFirewallRule | Where-Object { 
+    # Disable network discovery firewall rules
+    Get-NetFirewallRule | Where-Object {
+        # File and Printer Sharing, Network Discovery
+        ($_.Group -eq "@FirewallAPI.dll,-28502" -or $_.Group -eq "@FirewallAPI.dll,-32752") -or
         ($_.DisplayGroup -eq "File and Printer Sharing" -or $_.DisplayGroup -eq "Network Discovery") -and
         $_.Profile -like "*Private*"
     } | Enable-NetFirewallRule
@@ -43,10 +42,10 @@ if ($LASTEXITCODE -eq 1) {
 
 choice /c:yn /n /m "Would you like to restore the 'Give access to' context menu in Explorer? [Y/N] "
 if ($LASTEXITCODE -eq 1) {
-    reg import "$([Environment]::GetFolderPath('Windows'))\AtlasDesktop\3. General Configuration\File Sharing\Give Access To Menu\Give Access To Menu Enable.reg" | Out-Null
+    reg import "$([Environment]::GetFolderPath('Windows'))\AtlasDesktop\3. General Configuration\File Sharing\Give Access To Menu\Enable Give Access To Menu.reg" | Out-Null
 }
 
-Write-Host "Completed!" -ForegroundColor Green
-Write-Host "Press any key to exit... " -NoNewLine
-$Host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown') | Out-Null
+Write-Host "`nCompleted! " -ForegroundColor Green -NoNewLine
+Write-Host "You'll need to restart to apply the changes." -ForegroundColor Yellow
+$null = Read-Host "Press Enter to exit..."
 exit

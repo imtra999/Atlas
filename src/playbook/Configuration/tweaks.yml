@@ -24,7 +24,8 @@ actions:
   # to improving network performance, security, etc.
   # -----------------------------------------------------
   - !writeStatus: {status: 'Running networking tweaks'}
-  - !task: {path: 'tweaks\networking\disable-llmnr.yml'}
+  # Needed for compatibility
+  # - !task: {path: 'tweaks\networking\disable-llmnr.yml'}
   - !task: {path: 'tweaks\networking\atlas-network-settings.yml'}
 
   # -------------------------------------------------------------------------- #
@@ -166,6 +167,7 @@ actions:
   - !task: {path: 'tweaks\qol\disable-screen-capture-hotkey.yml', option: 'remove-snipping-tool'}
   - !task: {path: 'tweaks\qol\disable-dynamic-lighting.yml'}
   - !task: {path: 'tweaks\qol\disable-auto-app-archival.yml'}
+  - !task: {path: 'tweaks\qol\add-sharing-settings-shortcut.yml'}
 
   # -------------------------------------------------------------------------- #
   #  qol\appearance                                                            #
@@ -201,7 +203,6 @@ actions:
   - !task: {path: 'tweaks\qol\explorer\disable-check-boxes.yml'}
   - !task: {path: 'tweaks\qol\explorer\disable-folders-this-pc.yml'}
   - !task: {path: 'tweaks\qol\explorer\disable-network-navigation-pane.yml'}
-  - !task: {path: 'tweaks\qol\explorer\disable-sharing-wizard.yml'}
   - !task: {path: 'tweaks\qol\explorer\full-context-on-more-than-15-items.yml'}
   - !task: {path: 'tweaks\qol\explorer\hide-frequently-used-items.yml'}
   - !task: {path: 'tweaks\qol\explorer\import-power-plan.yml'}
@@ -259,6 +260,7 @@ actions:
   - !task: {path: 'tweaks\qol\shell\show-more-pins.yml'}
   - !task: {path: 'tweaks\qol\shell\no-recommendations-start-menu.yml'}
   - !task: {path: 'tweaks\qol\shell\disable-nearby-sharing.yml'}
+  - !task: {path: 'tweaks\qol\shell\config-autorun.yml'}
 
   # -------------------------------------------------------------------------- #
   #  qol\startup-shutdown                                                      #
@@ -303,7 +305,6 @@ actions:
   # -----------------------------------------------------
   - !writeStatus: {status: 'Running security tweaks'}
   - !task: {path: 'tweaks\security\block-anonymous-enum-sam.yml'}
-  - !task: {path: 'tweaks\security\delete-defaultuser0.yml'}
   - !task: {path: 'tweaks\security\disable-remote-assistance.yml'}
 
 
@@ -356,6 +357,7 @@ actions:
   - !task: {path: 'tweaks\misc\config-time.yml'}
   - !task: {path: 'tweaks\misc\delete-windows-specific-files.yml'}
   - !task: {path: 'tweaks\misc\rebuild-perf-counters.yml'}
+  - !task: {path: 'tweaks\misc\make-measuresleep-admin.yml'}
   - !task: {path: 'tweaks\misc\create-shortcuts.yml'}
   - !task: {path: 'tweaks\misc\add-music-videos-to-home.yml'}
   - !task: {path: 'tweaks\misc\add-newUsers-script.yml'}
